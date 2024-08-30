@@ -9,15 +9,17 @@ with open('north_data/customers_data.csv', 'r', encoding='utf-8') as file:
     for i in file_reader_1:
         customer.append(tuple(i))
 
-with psycopg2.connect(host="localhost", database="north", user="postgres", password="0606") as conn:
-    with conn.cursor() as cur:
-        cur.executemany('INSERT INTO customers VALUES (%s, %s, %s)', customer[1:])
-        cur.execute('SELECT * FROM customers')
-        rows = cur.fetchall()
-        for row in rows:
-            print(row)
+try:
+    with psycopg2.connect(host="localhost", database="north", user="postgres", password="0606") as conn:
+        with conn.cursor() as cur:
+            cur.executemany('INSERT INTO customers VALUES (%s, %s, %s)', customer[1:])
+            cur.execute('SELECT * FROM customers')
+            rows = cur.fetchall()
+            for row in rows:
+                print(row)
 
-conn.close()
+finally:
+        conn.close()
 
 
 order = []
