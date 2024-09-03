@@ -42,31 +42,83 @@ def main():
 
 def create_database(params, db_name) -> None:
     """Создает новую базу данных."""
-    pass
+    conn = psycopg2.connect(dbname='postgres', **params)
+    conn.autocommit = True
+    cur = conn.cursor()
+
+    cur.execute(f"DROP DATABASE {db_name}")
+    cur.execute(f"CREATE DATABASE {db_name}")
+
+    conn.close()
+    cur.close()
+
 
 def execute_sql_script(cur, script_file) -> None:
     """Выполняет скрипт из файла для заполнения БД данными."""
-
+    with open(script_file) as f:
+        script_file = f.read()
+        cur.execute(script_file)
 
 
 def create_suppliers_table(cur) -> None:
     """Создает таблицу suppliers."""
-    pass
+    cur.execute(
+        """
+        CREATE TABLE suppliers(
+        supplier_id serial,
+        company_name VARCHAR NOT NULL,
+        contact VARCHAR,
+        address VARCHAR,
+        phone VARCHAR,
+        fax VARCHAR,
+        homepage VARCHAR,
+        products VARCHAR,
+        PRIMARY KEY (supplier_id)
+        )
+        """
+    )
 
 
 def get_suppliers_data(json_file: str) -> list[dict]:
     """Извлекает данные о поставщиках из JSON-файла и возвращает список словарей с соответствующей информацией."""
-    pass
+    with open(json_file) as file:
+        file = json.load(file)
+        return file
 
 
 def insert_suppliers_data(cur, suppliers: list[dict]) -> None:
     """Добавляет данные из suppliers в таблицу suppliers."""
-    pass
+    for supplier in suppliers:
+        cur.execute(
+            """INSERT INTO suppliers ("company_name", "contact", "address", 
+           "phone", "fax", "homepage","products") 
+           VALUES(%s, %s, %s, %s, %s, %s, %s)
+           """,
+
+        (supplier["company_name"],
+         supplier["contact"],
+         supplier["address"],
+         supplier["phone"],
+         supplier["fax"],
+         supplier["homepage"],
+         ",".join(supplier["products"]),
+         )
+        )
 
 
 def add_foreign_keys(cur, json_file) -> None:
     """Добавляет foreign key со ссылкой на supplier_id в таблицу products."""
-    pass
+    cur.execute(
+        """
+        ALTER TABLE products
+        ADD COLUMN supplier_id integer;
+
+        ALTER TABLE products
+        ADD CONSTRAINT fk_supplier_id
+        FOREIGN KEY (supplier_id)
+        REFERENCES suppliers(supplier_id);
+        """
+    )
 
 
 if __name__ == '__main__':
